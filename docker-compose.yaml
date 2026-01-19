@@ -1,0 +1,434 @@
+version: "3.9"
+
+name: beetclick
+
+# Astuce: variables communes Spring
+x-spring-common-env: &spring_common_env
+  SPRING_PROFILES_ACTIVE: docker
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  SPRING_DATA_REDIS_HOST: redis
+  SPRING_DATA_REDIS_PORT: 6379
+  # Recommandé si actuator présent
+  MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: "true"
+  MANAGEMENT_HEALTH_LIVENESSSTATE_ENABLED: "true"
+  MANAGEMENT_HEALTH_READINESSSTATE_ENABLED: "true"
+
+x-spring-healthcheck: &spring_healthcheck
+  test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health | grep -q 'UP'"]
+  interval: 10s
+  timeout: 3s
+  retries: 20
+  start_period: 25s
+
+x-pg-healthcheck: &pg_healthcheck
+  test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+  interval: 5s
+  timeout: 3s
+  retries: 30
+  start_period: 10s
+
+services:
+  # -------------------------
+  # Infra (interne)
+  # -------------------------
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    networks: [internal]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+  kafka:
+    image: bitnami/kafka:3.7
+    networks: [internal]
+    environment:
+      # KRaft single-node
+      KAFKA_ENABLE_KRAFT: "yes"
+      KAFKA_CFG_PROCESS_ROLES: "broker,controller"
+      KAFKA_CFG_NODE_ID: "1"
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
+      KAFKA_CFG_LISTENERS: "PLAINTEXT://:9092,CONTROLLER://:9093"
+      KAFKA_CFG_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092"
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT"
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server kafka:9092 --list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    volumes:
+      - kafka-data:/bitnami/kafka
+    restart: unless-stopped
+
+  # -------------------------
+  # Postgres (1 DB par service)
+  # -------------------------
+  db-auth:
+    image: postgres:16-alpine
+    networks: [internal]
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    healthcheck: *pg_healthcheck
+    volumes:
+      - pg-auth:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  db-user:
+    image: postgres:16-alpine
+    networks: [internal]
+    environment:
+      POSTGRES_DB: user_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    healthcheck: *pg_healthcheck
+    volumes:
+      - pg-user:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  db-pari:
+    image: postgres:16-alpine
+    networks: [internal]
+    environment:
+      POSTGRES_DB: pari_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    healthcheck: *pg_healthcheck
+    volumes:
+      - pg-pari:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  db-match:
+    image: postgres:16-alpine
+    networks: [internal]
+    environment:
+      POSTGRES_DB: match_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    healthcheck: *pg_healthcheck
+    volumes:
+      - pg-match:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  db-wallet:
+    image: postgres:16-alpine
+    networks: [internal]
+    environment:
+      POSTGRES_DB: wallet_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    healthcheck: *pg_healthcheck
+    volumes:
+      - pg-wallet:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  db-notification:
+    image: postgres:16-alpine
+    networks: [internal]
+    environment:
+      POSTGRES_DB: notification_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    healthcheck: *pg_healthcheck
+    volumes:
+      - pg-notification:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  db-payment:
+    image: postgres:16-alpine
+    networks: [internal]
+    environment:
+      POSTGRES_DB: payment_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    healthcheck: *pg_healthcheck
+    volumes:
+      - pg-payment:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  db-stats:
+    image: postgres:16-alpine
+    networks: [internal]
+    environment:
+      POSTGRES_DB: stats_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    healthcheck: *pg_healthcheck
+    volumes:
+      - pg-stats:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  # -------------------------
+  # Microservices Spring Boot (internes)
+  # Hypothèse: Dockerfile dans beetclick/services/<service>/
+  # -------------------------
+  auth-service:
+    build:
+      context: ./services/auth-service
+    networks: [internal]
+    environment:
+      <<: *spring_common_env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-auth:5432/auth_db
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      db-auth:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck: *spring_healthcheck
+    restart: unless-stopped
+
+  user-service:
+    build:
+      context: ./services/user-service
+    networks: [internal]
+    environment:
+      <<: *spring_common_env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-user:5432/user_db
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      db-user:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck: *spring_healthcheck
+    restart: unless-stopped
+
+  pari-service:
+    build:
+      context: ./services/pari-service
+    networks: [internal]
+    environment:
+      <<: *spring_common_env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-pari:5432/pari_db
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      db-pari:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck: *spring_healthcheck
+    restart: unless-stopped
+
+  match-service:
+    build:
+      context: ./services/match-service
+    networks: [internal]
+    environment:
+      <<: *spring_common_env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-match:5432/match_db
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      db-match:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck: *spring_healthcheck
+    restart: unless-stopped
+
+  wallet-service:
+    build:
+      context: ./services/wallet-service
+    networks: [internal]
+    environment:
+      <<: *spring_common_env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-wallet:5432/wallet_db
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      db-wallet:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck: *spring_healthcheck
+    restart: unless-stopped
+
+  notification-service:
+    build:
+      context: ./services/notification-service
+    networks: [internal]
+    environment:
+      <<: *spring_common_env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-notification:5432/notification_db
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      db-notification:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck: *spring_healthcheck
+    restart: unless-stopped
+
+  payment-service:
+    build:
+      context: ./services/payment-service
+    networks: [internal]
+    environment:
+      <<: *spring_common_env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-payment:5432/payment_db
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      db-payment:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck: *spring_healthcheck
+    restart: unless-stopped
+
+  stats-service:
+    build:
+      context: ./services/stats-service
+    networks: [internal]
+    environment:
+      <<: *spring_common_env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-stats:5432/stats_db
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      db-stats:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck: *spring_healthcheck
+    restart: unless-stopped
+
+  aggregator-service:
+    build:
+      context: ./services/aggregator-service
+    networks: [internal]
+    environment:
+      <<: *spring_common_env
+      # souvent pas de DB pour l'aggregator (si tu veux, on en ajoute)
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+      match-service:
+        condition: service_healthy
+      pari-service:
+        condition: service_healthy
+      wallet-service:
+        condition: service_healthy
+      stats-service:
+        condition: service_healthy
+    healthcheck: *spring_healthcheck
+    restart: unless-stopped
+
+  # -------------------------
+  # API Gateway (exposé)
+  # -------------------------
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+    networks:
+      - public
+      - internal
+    ports:
+      - "${GATEWAY_PORT:-8080}:8080"
+    environment:
+      <<: *spring_common_env
+      # Exemple d'URL internes (à adapter selon ton gateway)
+      SERVICES_AUTH_URL: http://auth-service:8080
+      SERVICES_USER_URL: http://user-service:8080
+      SERVICES_PARI_URL: http://pari-service:8080
+      SERVICES_MATCH_URL: http://match-service:8080
+      SERVICES_WALLET_URL: http://wallet-service:8080
+      SERVICES_NOTIFICATION_URL: http://notification-service:8080
+      SERVICES_PAYMENT_URL: http://payment-service:8080
+      SERVICES_STATS_URL: http://stats-service:8080
+      SERVICES_AGGREGATOR_URL: http://aggregator-service:8080
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+      pari-service:
+        condition: service_healthy
+      match-service:
+        condition: service_healthy
+      wallet-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+      payment-service:
+        condition: service_healthy
+      stats-service:
+        condition: service_healthy
+      aggregator-service:
+        condition: service_healthy
+    healthcheck: *spring_healthcheck
+    restart: unless-stopped
+
+  # -------------------------
+  # Web Next.js (exposé)
+  # -------------------------
+  web:
+    build:
+      context: ./web
+    networks:
+      - public
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    environment:
+      # côté Next.js (adapt selon ton code)
+      NEXT_PUBLIC_API_BASE_URL: "http://localhost:${GATEWAY_PORT:-8080}"
+      NODE_ENV: production
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    restart: unless-stopped
+
+
+networks:
+  public:
+    driver: bridge
+  internal:
+    driver: bridge
+    internal: true
+
+volumes:
+  redis-data:
+  kafka-data:
+  pg-auth:
+  pg-user:
+  pg-pari:
+  pg-match:
+  pg-wallet:
+  pg-notification:
+  pg-payment:
+  pg-stats:
