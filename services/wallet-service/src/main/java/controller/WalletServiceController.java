@@ -20,7 +20,6 @@ private final WalletService walletService;
 
     @GetMapping()
     public WalletResponse getMyWallet(@RequestParam UUID userId) {
-
         WalletResponse wallet = walletService.getWalletByUserId(userId);
 
         return wallet;
