@@ -1,0 +1,66 @@
+version: "3.9"
+
+services:
+  kafka:
+    image: apache/kafka-native:4.1.1
+    container_name: kafka
+    user: root
+    ports:
+      - "9092:9092"
+    environment:
+      # KRaft single-node, combined controller + broker
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9091
+
+      # Listeners for host and Docker clients
+      KAFKA_LISTENERS: >
+        CONTROLLER://localhost:9091,
+        HOST://0.0.0.0:9092,
+        DOCKER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: >
+        HOST://localhost:9092,
+        DOCKER://kafka:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: >
+        CONTROLLER:PLAINTEXT,
+        DOCKER:PLAINTEXT,
+        HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER
+
+      # Single-node replication defaults
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+
+      # Log directory matches the mounted volume
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      - kafka-net
+
+  kafka-ui:
+    image: kafbat/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8090:8090"
+    environment:
+      SERVER_PORT: 8090
+      # Allow configuring clusters via UI or config file
+      DYNAMIC_CONFIG_ENABLED: "true"
+
+      # Static cluster pointing at the Kafka service
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9093
+    depends_on:
+      - kafka
+    networks:
+      - kafka-net
+
+volumes:
+  kafka_data:
+
+networks:
+  kafka-net:
+    driver: bridge
