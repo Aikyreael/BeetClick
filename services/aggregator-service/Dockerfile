@@ -1,10 +1,10 @@
 FROM maven:3.9-eclipse-temurin-25 AS build
 
 WORKDIR /app
-COPY services/auth-service/pom.xml .
+COPY services/aggregator-service/pom.xml .
 RUN mvn -B dependency:go-offline
 
-COPY services/auth-service/src ./src
+COPY services/aggregator-service/src ./src
 RUN mvn -B package -DskipTests
 
 FROM eclipse-temurin:25-jre
