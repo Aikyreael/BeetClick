@@ -8,6 +8,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="auth-service" />
         <module name="payment-service" />
+        <module name="common" />
         <module name="aggregator-service" />
         <module name="stats-service" />
         <module name="bet-service" />
@@ -24,6 +25,7 @@
       <module name="aggregator-service" options="-parameters" />
       <module name="auth-service" options="-parameters" />
       <module name="bet-service" options="-parameters" />
+      <module name="common" options="-parameters" />
       <module name="gateway" options="-parameters" />
       <module name="match-service" options="-parameters" />
       <module name="notification-service" options="-parameters" />

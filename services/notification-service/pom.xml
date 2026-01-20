@@ -6,7 +6,7 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>4.0.1</version>
-        <relativePath>/pom.xml</relativePath>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
     <groupId>com.beetclick</groupId>
     <artifactId>notification-service</artifactId>
