@@ -1,9 +1,11 @@
 package com.beetclick.authservice.controller;
 
-import com.beetclick.authservice.dto.*;
-import com.beetclick.authservice.entity.AuthUser;
 import com.beetclick.authservice.service.AuthService;
-import com.beetclick.authservice.utiliy.SecurityUtils;
+import com.beetclick.common.dto.auth.request.LoginRequest;
+import com.beetclick.common.dto.auth.request.RefreshRequest;
+import com.beetclick.common.dto.auth.request.RegisterRequest;
+import com.beetclick.common.dto.auth.response.AuthResponse;
+import com.beetclick.common.dto.auth.response.RegisterResponse;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -58,9 +60,6 @@ public class AuthController {
         jwtCookie.setPath("/");
         jwtCookie.setMaxAge(0);
         response.addCookie(jwtCookie);
-
-        AuthUser currentUser = SecurityUtils.getCurrentUserOrThrow();
-        logger.info("User logout successful, userId={}, email={}", currentUser.getId(), currentUser.getEmail());
         return ResponseEntity.ok("Déconnexion réussie");
     }
 

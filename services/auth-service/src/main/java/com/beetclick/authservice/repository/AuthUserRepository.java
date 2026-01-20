@@ -1,7 +1,7 @@
 package com.beetclick.authservice.repository;
 
 import com.beetclick.authservice.entity.AuthUser;
-import com.beetclick.authservice.entity.Role;
+import com.beetclick.common.entity.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

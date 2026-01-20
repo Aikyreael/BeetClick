@@ -1,4 +1,4 @@
-package com.beetclick.authservice.entity;
+package com.beetclick.common.entity;
 
 public enum Role {
     ADMIN,

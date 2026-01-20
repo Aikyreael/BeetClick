@@ -1,4 +1,4 @@
-package com.beetclick.authservice.dto;
+package com.beetclick.common.dto.auth.request;
 
 import jakarta.validation.constraints.NotBlank;
 

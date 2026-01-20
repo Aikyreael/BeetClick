@@ -5,6 +5,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +14,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,8 +34,26 @@ public class JwtService {
     private long jwtExpiration;
 
     private SecretKey getSignInKey() {
-        byte[] keyBytes = secretKey.getBytes();
+        byte[] keyBytes = decodeJwtSecret(secretKey);
+
+        if (keyBytes.length < 32) {
+            throw new IllegalStateException("JWT secret too short: need >= 32 bytes after decode (HS256).");
+        }
+
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    private byte[] decodeJwtSecret(String secret) {
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException("jwt.secret is missing/blank");
+        }
+        try {
+            byte[] decoded = Decoders.BASE64.decode(secret);
+            if (decoded != null && decoded.length > 0) return decoded;
+        } catch (Exception ignored) {
+        }
+
+        return secret.getBytes(StandardCharsets.UTF_8);
     }
 
     public String generateToken(UserDetails userDetails) {
@@ -45,8 +67,10 @@ public class JwtService {
 
     private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {
         AuthUser user = (AuthUser) userDetails;
+
         extraClaims.put("role", user.getRole().name());
-        extraClaims.put("userId", user.getId());
+        extraClaims.put("userId", user.getId().toString());
+        extraClaims.put("email", user.getEmail());
 
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
@@ -67,6 +91,7 @@ public class JwtService {
         try {
             final String username = extractUsername(token);
             boolean valid = (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+
             if (!valid) {
                 logger.debug("Invalid JWT attempt for userId={}, email={}",
                         ((AuthUser) userDetails).getId(), userDetails.getUsername());
@@ -75,6 +100,7 @@ public class JwtService {
                         ((AuthUser) userDetails).getId(), userDetails.getUsername());
             }
             return valid;
+
         } catch (ExpiredJwtException ex) {
             logger.debug("Expired JWT token for email={}", userDetails.getUsername());
         } catch (JwtException ex) {
@@ -88,7 +114,6 @@ public class JwtService {
     private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
-
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -110,5 +135,4 @@ public class JwtService {
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
-
 }

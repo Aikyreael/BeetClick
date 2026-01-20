@@ -1,3 +1,11 @@
+version: "3.9"
+
+name: beetclick
+
+volumes:
+  auth-db-data:
+  user-db-data:
+
 services:
   auth-db:
     image: postgres:16-alpine
@@ -7,7 +15,7 @@ services:
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
     ports:
-      - "${AUTH_DB_PORT:-5433}:5432"
+      - "5433:5432"
     volumes:
       - auth-db-data:/var/lib/postgresql/data
     healthcheck:
@@ -17,5 +25,20 @@ services:
       retries: 10
     restart: unless-stopped
 
-volumes:
-  auth-db-data:
+  user-db:
+    image: postgres:16-alpine
+    container_name: user-db
+    environment:
+      POSTGRES_DB: ${USER_DB_NAME:-user}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "5434:5432"
+    volumes:
+      - user-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped

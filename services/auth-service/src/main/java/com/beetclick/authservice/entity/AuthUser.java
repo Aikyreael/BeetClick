@@ -1,5 +1,6 @@
 package com.beetclick.authservice.entity;
 
+import com.beetclick.common.entity.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;

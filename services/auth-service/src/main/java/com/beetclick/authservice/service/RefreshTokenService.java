@@ -1,7 +1,7 @@
 package com.beetclick.authservice.service;
 
 import com.beetclick.authservice.entity.RefreshToken;
-import com.beetclick.authservice.entity.Role;
+import com.beetclick.common.entity.Role;
 import com.beetclick.authservice.repository.RefreshTokenRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;

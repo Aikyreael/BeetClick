@@ -1,8 +1,7 @@
-package com.beetclick.authservice.dto;
+package com.beetclick.common.dto.auth.response;
 
-import com.beetclick.authservice.entity.Role;
+import com.beetclick.common.entity.Role;
 
-import java.time.Instant;
 import java.util.UUID;
 
 public record AuthResponse(

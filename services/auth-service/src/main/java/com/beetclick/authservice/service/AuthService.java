@@ -1,14 +1,17 @@
 package com.beetclick.authservice.service;
 
 
-import com.beetclick.authservice.dto.*;
 import com.beetclick.authservice.entity.AuthUser;
-import com.beetclick.authservice.entity.Role;
 import com.beetclick.authservice.exception.EmailAlreadyExistsException;
-import com.beetclick.authservice.exception.InvalidPasswordException;
 import com.beetclick.authservice.exception.UnauthorizedException;
 import com.beetclick.authservice.exception.UserNotFoundException;
 import com.beetclick.authservice.repository.AuthUserRepository;
+import com.beetclick.common.dto.auth.request.LoginRequest;
+import com.beetclick.common.dto.auth.request.RegisterRequest;
+import com.beetclick.common.dto.auth.response.AuthResponse;
+import com.beetclick.common.dto.auth.response.RegisterResponse;
+import com.beetclick.common.entity.Role;
+import com.beetclick.common.event.auth.UserRegisteredEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,9 +21,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.Instant;
-import java.util.UUID;
 
 @Service
 public class AuthService implements UserDetailsService {
@@ -35,16 +38,19 @@ public class AuthService implements UserDetailsService {
 
     private final RefreshTokenService refreshTokenService;
 
+    private final ObjectMapper objectMapper;
+
     private static final String TOPIC_USER_REGISTERED = "auth.user-registered";
 
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final KafkaTemplate<String, String> kafkaTemplate;
 
     @Autowired
-    public AuthService(AuthUserRepository authUserRepository, PasswordEncoder passwordEncoder, JwtService jwtService, RefreshTokenService refreshTokenService, KafkaTemplate<String, Object> kafkaTemplate) {
+    public AuthService(AuthUserRepository authUserRepository, PasswordEncoder passwordEncoder, JwtService jwtService, RefreshTokenService refreshTokenService, ObjectMapper objectMapper, KafkaTemplate<String, String> kafkaTemplate) {
         this.authUserRepository = authUserRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
+        this.objectMapper = objectMapper;
         this.kafkaTemplate = kafkaTemplate;
     }
 
@@ -82,6 +88,7 @@ public class AuthService implements UserDetailsService {
 
     public RegisterResponse register(RegisterRequest req) {
         logger.debug("Attempting to create user with email={}", req.email());
+
         if (authUserRepository.existsByEmail(req.email())) {
             logger.warn("Email already exists: {}", req.email());
             throw new EmailAlreadyExistsException("Un utilisateur avec cet email existe déjà");
@@ -103,7 +110,9 @@ public class AuthService implements UserDetailsService {
                     Instant.now()
             );
 
-            kafkaTemplate.send(TOPIC_USER_REGISTERED, saved.getId().toString(), event)
+            String payload = objectMapper.writeValueAsString(event);
+
+            kafkaTemplate.send(TOPIC_USER_REGISTERED, saved.getId().toString(), payload)
                     .whenComplete((res, ex) -> {
                         if (ex != null) {
                             logger.warn("Kafka publish failed userId={}", saved.getId(), ex);
@@ -112,11 +121,13 @@ public class AuthService implements UserDetailsService {
                         }
                     });
         } catch (Exception ex) {
+            // On ne casse pas l'inscription si Kafka a un souci (MVP-friendly)
             logger.warn("Kafka publish error ignored userId={}", saved.getId(), ex);
         }
 
         return convertToResponse(saved);
     }
+
 
     public AuthResponse refresh(String rawRefreshToken) {
         var pair = refreshTokenService.rotate(rawRefreshToken);

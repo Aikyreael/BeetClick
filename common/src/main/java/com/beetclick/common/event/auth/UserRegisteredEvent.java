@@ -1,4 +1,4 @@
-package com.beetclick.authservice.dto;
+package com.beetclick.common.event.auth;
 
 import java.time.Instant;
 import java.util.UUID;

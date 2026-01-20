@@ -8,7 +8,7 @@
 
 
         <RollingFile name="FileLogger"
-                     fileName="logs/app.log"
+                     fileName="logs/auth_app.log"
                      filePattern="logs/app-%d{yyyy-MM-dd}.log.gz">
             <PatternLayout>
                 <Pattern>%d{ISO8601} %-5p [%X{requestId}] [%X{userId}] %c{1} - %m | path=%X{path} method=%X{httpMethod} ip=%X{clientIp}</Pattern>
