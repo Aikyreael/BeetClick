@@ -5,6 +5,7 @@ import entity.Wallet;
 import jakarta.persistence.EntityNotFoundException;
 import repository.WalletRepository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -60,4 +61,18 @@ public class WalletService {
     }
 
 
+    public void creditWallet(UUID walletId, int amount) {
+        WalletResponse wallet = walletRepository.findById(walletId)
+                .orElseThrow(() -> new RuntimeException("Wallet not found"));
+
+        wallet.setBalance(wallet.getBalance().add(BigDecimal.valueOf(amount)));
+        walletRepository.save(wallet);
+    }
+
+    public void debitWallet(UUID walletId, int amount) {
+        WalletResponse wallet = walletRepository.findById(walletId)
+                .orElseThrow(() -> new RuntimeException("Wallet not found"));
+        wallet.setBalance(wallet.getBalance().subtract(BigDecimal.valueOf(amount)));
+        walletRepository.save(wallet);
+    }
 }

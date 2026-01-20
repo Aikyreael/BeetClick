@@ -57,7 +57,7 @@ private final WalletService walletService;
                 updatedWallet.getCoin()
         );
 
-        return ResponseEntity.ok(response);
+        return response;
     }
 
 }
