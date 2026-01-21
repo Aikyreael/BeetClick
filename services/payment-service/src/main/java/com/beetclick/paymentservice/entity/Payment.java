@@ -1,7 +1,7 @@
 package com.beetclick.paymentservice.entity;
 
-import com.beetclick.paymentservice.dto.PaymentCategory;
-import com.beetclick.paymentservice.dto.PaymentStatus;
+import com.beetclick.common.entity.PaymentCategory;
+import com.beetclick.common.entity.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -1,16 +1,21 @@
 package com.beetclick.paymentservice.service;
 
+import com.beetclick.common.entity.PaymentCategory;
+import com.beetclick.common.entity.PaymentStatus;
+import com.beetclick.common.event.payment.PaymentFailedEvent;
+import com.beetclick.common.event.payment.PaymentInitializedEvent;
+import com.beetclick.common.event.payment.PaymentSuccessEvent;
 import com.beetclick.paymentservice.client.WalletClient;
-import com.beetclick.paymentservice.dto.*;
+import com.beetclick.paymentservice.dto.PaymentCreditRequest;
+import com.beetclick.paymentservice.dto.PaymentResponse;
 import com.beetclick.paymentservice.entity.Payment;
 import com.beetclick.paymentservice.exception.PaymentNotFoundException;
 import com.beetclick.paymentservice.persistence.PaymentRepository;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -24,6 +29,10 @@ public class PaymentService {
 
     private static final double MIN_DEPOSIT = 10.0;
     private static final double DAILY_LIMIT = 1000.0;
+
+    private static final String TOPIC_PAYMENT_INITIALIZED = "payment.initialized";
+    private static final String TOPIC_PAYMENT_SUCCESS = "payment.success";
+    private static final String TOPIC_PAYMENT_FAILED = "payment.failed";
 
     public PaymentService(
             PaymentRepository paymentRepository,
@@ -60,10 +69,10 @@ public class PaymentService {
 
     @Transactional
     public Payment creditWallet(PaymentCreditRequest request, UUID userId) {
-        kafkaTemplate.send("payment.initialized", request);
+        publishInitializedEvent(userId, request.walletId(), request.amount(), PaymentCategory.CREDIT);
 
         if (request.amount() < MIN_DEPOSIT) {
-            publishFailedEvent("Minimum deposit is 10€");
+            publishFailedEvent(userId, request.walletId(), request.amount(), PaymentCategory.CREDIT, "Minimum deposit is 10€");
             throw new IllegalArgumentException("Minimum deposit is 10€");
         }
 
@@ -73,7 +82,7 @@ public class PaymentService {
         );
 
         if (todayTotal + request.amount() > DAILY_LIMIT) {
-            publishFailedEvent("Daily limit exceeded");
+            publishFailedEvent(userId, request.walletId(), request.amount(), PaymentCategory.CREDIT, "Daily limit exceeded");
             throw new IllegalStateException("Daily limit exceeded (1000€)");
         }
 
@@ -93,12 +102,12 @@ public class PaymentService {
 
     @Transactional
     public Payment withdrawWallet(PaymentCreditRequest request, UUID userId) {
-        publishInitializedEvent(request);
+        publishInitializedEvent(userId, request.walletId(), request.amount(), PaymentCategory.WITHDRAWAL);
 
         double balance = walletClient.getBalance(request.walletId());
 
         if (balance < request.amount()) {
-            publishFailedEvent("Insufficient balance");
+            publishFailedEvent(userId, request.walletId(), request.amount(), PaymentCategory.WITHDRAWAL, "Insufficient balance");
             throw new IllegalStateException("Insufficient balance");
         }
 
@@ -116,16 +125,38 @@ public class PaymentService {
         return saved;
     }
 
-    private void publishInitializedEvent(PaymentCreditRequest request) {
-        kafkaTemplate.send("payment.initialized", request);
+    private void publishInitializedEvent(UUID userId, UUID walletId, double amount, PaymentCategory category) {
+        PaymentInitializedEvent event = new PaymentInitializedEvent(
+                userId,
+                walletId,
+                amount,
+                category,
+                Instant.now()
+        );
+        kafkaTemplate.send(TOPIC_PAYMENT_INITIALIZED, event);
     }
 
     private void publishSuccessEvent(Payment payment) {
-        kafkaTemplate.send("payment.success", payment);
+        PaymentSuccessEvent event = new PaymentSuccessEvent(
+                payment.getId(),
+                payment.getUserId(),
+                payment.getWalletId(),
+                payment.getAmount(),
+                payment.getCategory(),
+                Instant.now()
+        );
+        kafkaTemplate.send(TOPIC_PAYMENT_SUCCESS, event);
     }
 
-    private void publishFailedEvent(String reason) {
-        kafkaTemplate.send("payment.failed", reason);
+    private void publishFailedEvent(UUID userId, UUID walletId, double amount, PaymentCategory category, String reason) {
+        PaymentFailedEvent event = new PaymentFailedEvent(
+                userId,
+                walletId,
+                amount,
+                category,
+                reason,
+                Instant.now()
+        );
+        kafkaTemplate.send(TOPIC_PAYMENT_FAILED, event);
     }
-
 }
