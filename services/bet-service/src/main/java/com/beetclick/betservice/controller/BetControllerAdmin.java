@@ -9,7 +9,7 @@ import java.util.UUID;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("admin/bets")
+@RequestMapping("/admin/bets")
 public class BetControllerAdmin {
     private final BetServiceAdmin betServiceAdmin;
 

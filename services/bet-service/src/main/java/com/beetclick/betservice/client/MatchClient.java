@@ -2,6 +2,7 @@ package com.beetclick.betservice.client;
 
 import java.util.UUID;
 
+import com.beetclick.common.dto.match.response.MatchResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -9,15 +10,15 @@ import org.springframework.web.client.RestTemplate;
 public class MatchClient {
     private final RestTemplate restTemplate = new RestTemplate();
 
+    private final String gatewayUrl = "http://localhost:8083";
+
     public MatchResponse getMatch(UUID matchId) {
-        MatchResponse response = restTemplate.getForObject(
-                "http://localhost:8083/matches/{matchId}",
+        return restTemplate.getForObject(
+                gatewayUrl + "/matches/{matchId}",
                 MatchResponse.class,
                 matchId
         );
-        return response;
     }
 
-    public record MatchResponse(UUID id, String status, double oddsTeam1, double oddsDraw, double oddsTeam2) {}
 
 }

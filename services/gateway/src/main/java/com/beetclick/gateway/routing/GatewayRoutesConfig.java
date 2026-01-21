@@ -29,6 +29,8 @@ public class GatewayRoutesConfig {
                 .route("match-admin", r -> r.path("/admin/matches", "/admin/matches/**").uri(matchUri))
 
                 .route("bet", r -> r.path("/bets/**").uri(betUri))
+                .route("bet-admin", r -> r.path("/admin/bets", "/admin/bets/**").uri(matchUri))
+
                 .route("wallet", r -> r.path("/wallets/**").uri(walletUri))
                 .route("payment", r -> r.path("/payments/**").uri(paymentUri))
                 .route("notification", r -> r.path("/notifications/**").uri(notifUri))

@@ -67,6 +67,7 @@ public class SecurityConfig {
 
                         // BET
                         .pathMatchers("/bets/**").hasAnyRole("USER", "ADMIN")
+                        .pathMatchers("/admin/bets/**").hasAnyRole("ADMIN")
 
                         // MATCH
                         .pathMatchers(HttpMethod.GET, "/matches/**").hasAnyRole("USER", "ADMIN")

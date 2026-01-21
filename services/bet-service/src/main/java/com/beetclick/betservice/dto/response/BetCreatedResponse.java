@@ -1,5 +1,6 @@
 package com.beetclick.betservice.dto.response;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import lombok.Getter;
@@ -11,8 +12,8 @@ public class BetCreatedResponse {
     private UUID id;
     private UUID userId;
     private UUID matchId;
-    private double amount;
-    private double odds;
-    private double gain;
+    private BigDecimal amount;
+    private BigDecimal odds;
+    private BigDecimal gain;
     private String option;
 }

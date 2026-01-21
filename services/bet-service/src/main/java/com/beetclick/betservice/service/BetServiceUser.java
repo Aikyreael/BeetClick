@@ -1,13 +1,14 @@
 package com.beetclick.betservice.service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.beetclick.common.dto.match.response.MatchResponse;
 import org.springframework.stereotype.Service;
 
 import com.beetclick.betservice.client.MatchClient;
-import com.beetclick.betservice.client.MatchClient.MatchResponse;
 import com.beetclick.betservice.client.WalletClient;
 import com.beetclick.betservice.dto.request.BetCreateRequest;
 import com.beetclick.betservice.dto.response.BetCreatedResponse;
@@ -53,7 +54,7 @@ public class BetServiceUser {
     @Transactional
     public BetCreatedResponse createBet(UUID userId, BetCreateRequest req) {
         MatchResponse match = matchClient.getMatch(req.getMatchId());
-        double balance = walletClient.getBalance(userId);
+        BigDecimal balance = walletClient.getBalance(userId);
 
         // Un match doit être SCHEDULED pour accepter les paris
         if (!"SCHEDULED".equals(match.status())) {
@@ -61,18 +62,18 @@ public class BetServiceUser {
         }
 
         // Un utilisateur doit avoir assez de fonds dans son portefeuille pour parier
-        if (balance < req.getAmount()) {
+        if (balance.compareTo(req.getAmount()) < 0) {
             throw new IllegalStateException("Vous n'avez pas assez de fonds dans votre portefeuille");
         }
 
         // Calcul du gain potentiel
-        double odds = switch (req.getOption().toLowerCase()) {
-            case "1" -> match.oddsTeam1();
+        BigDecimal odds = switch (req.getOption().toLowerCase()) {
+            case "1" -> match.oddsHomeWin();
             case "x" -> match.oddsDraw();
-            case "2" -> match.oddsTeam2();
+            case "2" -> match.oddsAwayWin();
             default -> throw new IllegalArgumentException("Option non valide");
         };
-        double gain = req.getAmount() * odds;
+        BigDecimal gain = req.getAmount().multiply(odds);
 
         // Création du pari
         Bet bet = new Bet();

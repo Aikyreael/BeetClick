@@ -5,6 +5,7 @@ volumes:
   user-db-data:
   match-db-data:
   bet-db-data:
+  wallet-db-data:
 
 services:
   auth-db:
@@ -72,6 +73,24 @@ services:
       - "5436:5432"
     volumes:
       - bet-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  wallet-db:
+    image: postgres:16-alpine
+    container_name: wallet-db
+    environment:
+      POSTGRES_DB: ${WALLET_DB_NAME:-wallet}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "5437:5432"
+    volumes:
+      - wallet-db-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s

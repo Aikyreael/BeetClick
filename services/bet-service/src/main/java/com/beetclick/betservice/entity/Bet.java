@@ -3,6 +3,8 @@ package com.beetclick.betservice.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -25,13 +27,13 @@ public class Bet {
     private UUID matchId;
 
     @Column(name = "amount", nullable = false)
-    private double amount;
+    private BigDecimal amount;
 
     @Column(name = "odds", nullable = false)
-    private double odds;
+    private BigDecimal odds;
 
     @Column(name = "gain")
-    private double gain;
+    private BigDecimal gain;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "option", nullable = false, length = 2)
