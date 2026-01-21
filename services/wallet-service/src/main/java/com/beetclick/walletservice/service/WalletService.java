@@ -70,7 +70,6 @@ public class WalletService {
         );
     }
 
-
     public void creditWallet(UUID walletId, int amount) {
         Wallet wallet = walletRepository.findById(walletId)
                 .orElseThrow(() -> new RuntimeException("Wallet not found"));
@@ -79,9 +78,16 @@ public class WalletService {
         walletRepository.save(wallet);
     }
 
-    public void debitWallet(UUID walletId, int amount) {
+    public void debitWalletByWalletId(UUID walletId, int amount) {
         Wallet wallet = walletRepository.findById(walletId)
                 .orElseThrow(() -> new RuntimeException("Wallet not found"));
+        wallet.setBalance(wallet.getBalance().subtract(BigDecimal.valueOf(amount)));
+        walletRepository.save(wallet);
+    }
+
+    public void debitWalletByUserId(UUID userId, int amount) {
+        Wallet wallet = walletRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         wallet.setBalance(wallet.getBalance().subtract(BigDecimal.valueOf(amount)));
         walletRepository.save(wallet);
     }

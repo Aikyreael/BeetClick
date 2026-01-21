@@ -17,6 +17,8 @@ public interface WalletRepository extends JpaRepository<Wallet, UUID> {
     @Override
     Optional<Wallet> findById(UUID uuid);
 
+
+
     @Override
      Wallet save( Wallet wallet);
 }
