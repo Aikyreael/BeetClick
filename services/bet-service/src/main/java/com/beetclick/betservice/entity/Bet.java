@@ -6,13 +6,15 @@ import lombok.Setter;
 import java.time.Instant;
 import java.util.UUID;
 
+import org.hibernate.annotations.UuidGenerator;
+
 @Entity
 @Getter
 @Setter
 @Table(name = "bet")
 public class Bet {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @UuidGenerator
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
 

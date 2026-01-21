@@ -1,5 +1,6 @@
 package com.beetclick.betservice.producer;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
@@ -11,6 +12,7 @@ import com.beetclick.betservice.event.BetRequested;
 public class BetEventProducer {
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
+    @Autowired
     public BetEventProducer(KafkaTemplate<String, Object> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
     }
