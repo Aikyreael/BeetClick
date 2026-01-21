@@ -34,7 +34,7 @@ public class Bet {
     private double gain;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "option", nullable = false, length = 1)
+    @Column(name = "option", nullable = false, length = 2)
     private BetOption option;
 
     @Column(name = "created_at", nullable = false, updatable = false)

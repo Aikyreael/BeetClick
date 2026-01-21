@@ -20,6 +20,7 @@ import jakarta.transaction.Transactional;
 
 @Service
 public class BetServiceUser {
+
     private final BetRepository betRepository;
     private final BetMapper betMapper;
     private final MatchClient matchClient;
