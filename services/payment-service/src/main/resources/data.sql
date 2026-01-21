@@ -1,3 +1,6 @@
+INSERT INTO payment (id, amount, user_id, wallet_id, status, category, created_at, created_by) VALUES
+    ('a1b2c3d4-e5f6-7890-abcd-ef1234567890', 100.00, '11111111-1111-1111-1111-111111111111', 'aaaa1111-aaaa-1111-aaaa-111111111111', 'SUCCESS', 'CREDIT', NOW(), '11111111-1111-1111-1111-111111111111')
+ON CONFLICT (id) DO NOTHING;
 -- Données de test pour la table payment
 -- User 1: 2 crédits SUCCESS + 1 retrait SUCCESS
 INSERT INTO payment (id, amount, user_id, wallet_id, status, category, created_at, created_by) VALUES

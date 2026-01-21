@@ -44,16 +44,6 @@ services:
       retries: 10
     restart: unless-stopped
 
-  payment-service:
-    build: ./services/payment-service
-    container_name: payment-service
-    depends_on:
-      - payment-db
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-    ports:
-      - "8085:8080"
-
   payment-db:
     image: postgres:16-alpine
     container_name: payment-db
