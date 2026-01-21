@@ -13,6 +13,8 @@ import com.beetclick.betservice.dto.request.BetCreateRequest;
 import com.beetclick.betservice.dto.response.BetCreatedResponse;
 import com.beetclick.betservice.entity.Bet;
 import com.beetclick.betservice.entity.BetOption;
+import com.beetclick.betservice.event.BetPlaced;
+import com.beetclick.betservice.producer.BetEventProducer;
 import com.beetclick.betservice.repository.BetRepository;
 import com.beetclick.betservice.utils.BetMapper;
 
@@ -25,12 +27,14 @@ public class BetServiceUser {
     private final BetMapper betMapper;
     private final MatchClient matchClient;
     private final WalletClient walletClient;
+    private final BetEventProducer eventProducer;
 
-    public BetServiceUser(BetRepository betRepository, BetMapper betMapper, MatchClient matchClient, WalletClient walletClient) {
+    public BetServiceUser(BetRepository betRepository, BetMapper betMapper, MatchClient matchClient, WalletClient walletClient, BetEventProducer eventProducer) {
         this.betRepository = betRepository;
         this.betMapper = betMapper;
         this.matchClient = matchClient;
         this.walletClient = walletClient;
+        this.eventProducer = eventProducer;
     }
 
     public List<BetCreatedResponse> getUserBets(UUID userId) {
@@ -80,6 +84,8 @@ public class BetServiceUser {
         bet.setOption(BetOption.valueOf(mapOption(req.getOption())));
         bet.setCreatedBy(userId);
         Bet savedBet = betRepository.save(bet);
+
+        eventProducer.publishBetPlaced(new BetPlaced(bet.getUserId(), bet.getMatchId(), bet.getAmount()));
 
         return betMapper.toResponse(savedBet);
     }

@@ -18,14 +18,14 @@ public class BetEventProducer {
     }
 
     public void publishBetRequested(BetRequested event) {
-        kafkaTemplate.send("bet-requests", event.betId().toString(), event);
+        kafkaTemplate.send("bet.requests", event.betId().toString(), event);
     }
 
     public void publishBetPlaced(BetPlaced event) {
-        kafkaTemplate.send("bet-placed", event.betId().toString(), event);
+        kafkaTemplate.send("bet.placed", event);
     }
 
     public void publishBetFailed(BetFailed event) {
-        kafkaTemplate.send("bet-failed", event.betId().toString(), event);
+        kafkaTemplate.send("bet.failed", event.betId().toString(), event);
     }
 }
