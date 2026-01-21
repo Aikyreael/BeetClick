@@ -1,4 +1,7 @@
 spring:
+  application:
+    name: payment-service
+
   kafka:
     bootstrap-servers: kafka:9092
     producer:
@@ -8,9 +11,9 @@ spring:
         spring.json.add.type.headers: false
 
   datasource:
-    url: jdbc:postgresql://localhost:5434/payment_db
-    username: payment_user
-    password: payment_pass
+    url: jdbc:postgresql://payment-db:5432/payment
+    username: postgres
+    password: postgres
     driver-class-name: org.postgresql.Driver
 
   jpa:

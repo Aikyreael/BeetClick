@@ -25,20 +25,6 @@ services:
     networks:
       - beetclick-network
 
-  payment-db:
-    image: postgres:16
-    container_name: payment-db
-    environment:
-      POSTGRES_DB: payment_db
-      POSTGRES_USER: payment_user
-      POSTGRES_PASSWORD: payment_pass
-    ports:
-      - "5434:5432"
-    volumes:
-      - payment-db-data:/var/lib/postgresql/data
-    networks:
-      - beetclick-network
-
   payment-service:
     build:
       context: .
@@ -48,8 +34,8 @@ services:
       - kafka
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://payment-db:5432/payment_db
-      SPRING_DATASOURCE_USERNAME: payment_user
-      SPRING_DATASOURCE_PASSWORD: payment_pass
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SERVER_PORT: 8085
@@ -57,6 +43,7 @@ services:
       - "8085:8085"
     networks:
       - beetclick-network
+
 
 volumes:
   payment-db-data:

@@ -5,7 +5,9 @@ import com.beetclick.paymentservice.dto.*;
 import com.beetclick.paymentservice.entity.Payment;
 import com.beetclick.paymentservice.exception.PaymentNotFoundException;
 import com.beetclick.paymentservice.persistence.PaymentRepository;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -125,4 +127,5 @@ public class PaymentService {
     private void publishFailedEvent(String reason) {
         kafkaTemplate.send("payment.failed", reason);
     }
+
 }
