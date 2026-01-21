@@ -21,7 +21,6 @@ public class PaymentEventConsumer {
     public void onSuccess(PaymentSuccessEvent event) {
         log.info("Payment success: paymentId={}, userId={}, amount={}",
                 event.paymentId(), event.userId(), event.amount());
-        // TODO: add business logic for successful payment
     }
 
     @KafkaListener(
@@ -31,7 +30,6 @@ public class PaymentEventConsumer {
     )
     public void onFailed(PaymentFailedEvent event) {
         log.warn("Payment failed: userId={}, reason={}", event.userId(), event.reason());
-        // TODO: add business logic for failed payment
     }
 
     @KafkaListener(
@@ -42,6 +40,5 @@ public class PaymentEventConsumer {
     public void onInitialized(PaymentInitializedEvent event) {
         log.info("Payment initialized: userId={}, walletId={}, amount={}",
                 event.userId(), event.walletId(), event.amount());
-        // TODO: add business logic for initialized payment
     }
 }
