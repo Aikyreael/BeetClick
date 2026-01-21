@@ -50,7 +50,7 @@ public class UserRegisteredListener {
                     record.topic(), key, event.userId(), event.email());
 
         } catch (Exception ex) {
-            // Pour MVP log + ignore, DLQ ensuite
+            // Pour MVP log, DLQ ensuite plus tard chacal
             log.warn("Failed to process user-registered event topic={} key={} payload={}",
                     record.topic(), key, payload, ex);
         }

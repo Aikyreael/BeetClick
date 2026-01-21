@@ -96,7 +96,7 @@ public class AuthService implements UserDetailsService {
 
         AuthUser u = new AuthUser();
         u.setEmail(req.email());
-        u.setRole(Role.USER);
+        u.setRole(Role.ADMIN);
         u.setPassword_hash(passwordEncoder.encode(req.password()));
         u.setEnabled(true);
 

@@ -24,7 +24,10 @@ public class GatewayRoutesConfig {
         return builder.routes()
                 .route("auth", r -> r.path("/auth/**").uri(authUri))
                 .route("user", r -> r.path("/users/**").uri(userUri))
+
                 .route("match", r -> r.path("/matches/**").uri(matchUri))
+                .route("match-admin", r -> r.path("/admin/matches", "/admin/matches/**").uri(matchUri))
+
                 .route("bet", r -> r.path("/bets/**").uri(betUri))
                 .route("wallet", r -> r.path("/wallets/**").uri(walletUri))
                 .route("payment", r -> r.path("/payments/**").uri(paymentUri))

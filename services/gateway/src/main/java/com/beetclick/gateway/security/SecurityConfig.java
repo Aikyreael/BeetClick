@@ -70,7 +70,7 @@ public class SecurityConfig {
 
                         // MATCH
                         .pathMatchers(HttpMethod.GET, "/matches/**").hasAnyRole("USER", "ADMIN")
-                        .pathMatchers(HttpMethod.POST, "/matches/**").hasRole("ADMIN")
+                        .pathMatchers(HttpMethod.POST, "/admin/matches/**").hasRole("ADMIN")
                         .pathMatchers(HttpMethod.PATCH, "/matches/**").hasRole("ADMIN")
 
                         // WALLET
