@@ -5,6 +5,7 @@ import com.beetclick.common.dto.match.response.MatchResponse;
 import com.beetclick.common.dto.match.response.OddsHistoryResponse;
 import com.beetclick.common.entity.MatchStatus;
 import com.beetclick.common.event.match.MatchEvent;
+import com.beetclick.common.event.match.MatchFinishedEvent;
 import com.beetclick.matchservice.entity.Match;
 import com.beetclick.matchservice.entity.MatchOddsHistory;
 import com.beetclick.matchservice.kafka.KafkaPublisher;
@@ -26,6 +27,7 @@ import java.util.UUID;
 public class MatchService {
 
     public static final String TOPIC_MATCH_EVENTS = "match.events";
+    public static final String TOPIC_MATCH_FINISHED = "match.finished";
 
     private final MatchRepository matchRepository;
     private final MatchOddsHistoryRepository oddsHistoryRepository;
@@ -144,7 +146,7 @@ public class MatchService {
 
         Match saved = matchRepository.save(m);
 
-        kafkaPublisher.publish(TOPIC_MATCH_EVENTS, saved.getId(), new MatchEvent("MATCH_FINISHED", saved.getId(), Instant.now()));
+        kafkaPublisher.publish(TOPIC_MATCH_FINISHED, saved.getId(), new MatchFinishedEvent(saved.getId(), saved.getResult()));
         return toResponse(saved);
     }
 
