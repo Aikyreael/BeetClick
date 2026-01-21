@@ -1,0 +1,32 @@
+INSERT INTO wallet (id,user_id,balance,coin,created_at,updated_at,created_by,updated_by)
+VALUES
+      (
+          '11111111-1111-1111-1111-111111111111',
+          'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+          100.00,
+          0,
+          NOW(),
+          NOW(),
+          'system',
+          'system'
+      ),
+      (
+          '22222222-2222-2222-2222-222222222222',
+          'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+          250.50,
+          0,
+          NOW(),
+          NOW(),
+          'system',
+          'system'
+      ),
+      (
+          '33333333-3333-3333-3333-333333333333',
+          'cccccccc-cccc-cccc-cccc-cccccccccccc',
+          50.00,
+          1,
+          NOW(),
+          NOW(),
+          'admin',
+          'admin'
+      );

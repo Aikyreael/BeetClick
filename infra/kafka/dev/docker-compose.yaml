@@ -1,9 +1,9 @@
-version: "3.9"
+
 
 services:
   kafka:
     image: apache/kafka-native:4.1.1
-    container_name: kafka
+    container_name: kafkacd
     user: root
     ports:
       - "9092:9092"
