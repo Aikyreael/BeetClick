@@ -17,6 +17,7 @@ public class BetEventProducer {
         this.kafkaTemplate = kafkaTemplate;
     }
 
+    // Not yet used : Can be used to avoid HTTP requests between services by asking wallet & match from kafka events
     public void publishBetRequested(BetRequested event) {
         kafkaTemplate.send("bet.requests", event.betId().toString(), event);
     }
@@ -25,6 +26,7 @@ public class BetEventProducer {
         kafkaTemplate.send("bet.placed", event);
     }
 
+    // Not yet used
     public void publishBetFailed(BetFailed event) {
         kafkaTemplate.send("bet.failed", event.betId().toString(), event);
     }

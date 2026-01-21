@@ -85,6 +85,7 @@ public class BetServiceUser {
         bet.setCreatedBy(userId);
         Bet savedBet = betRepository.save(bet);
 
+        // Publication de l'évenement pour le débit du portefeuille de l'utilisateur
         eventProducer.publishBetPlaced(new BetPlaced(bet.getUserId(), bet.getMatchId(), bet.getAmount()));
 
         return betMapper.toResponse(savedBet);

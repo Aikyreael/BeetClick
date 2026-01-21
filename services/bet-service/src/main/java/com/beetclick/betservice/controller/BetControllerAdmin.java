@@ -17,11 +17,21 @@ public class BetControllerAdmin {
         this.betServiceAdmin = betServiceAdmin;
     }
 
+    /**
+     * Admin endpoints to get all bets
+     * @param none
+     * @return List of BetCreatedResponse
+     */
     @GetMapping("/all")
     public List<BetCreatedResponse> getAllBets() {
         return betServiceAdmin.getAllBets();
     }
 
+    /**
+     * Admin endpoint to get a bet by its id
+     * @param id UUID of the bet
+     * @return BetCreatedResponse
+     */
     @GetMapping("/{id}")
     public BetCreatedResponse getBetById(@PathVariable UUID id) {
         return betServiceAdmin.getBetById(id);
