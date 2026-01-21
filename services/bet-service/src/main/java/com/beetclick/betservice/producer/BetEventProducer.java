@@ -3,6 +3,7 @@ package com.beetclick.betservice.producer;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
+import com.beetclick.betservice.event.BetFailed;
 import com.beetclick.betservice.event.BetPlaced;
 import com.beetclick.betservice.event.BetRequested;
 
@@ -22,7 +23,7 @@ public class BetEventProducer {
         kafkaTemplate.send("bet-placed", event.betId().toString(), event);
     }
 
-    public void publishBetFailed(BetPlaced event) {
+    public void publishBetFailed(BetFailed event) {
         kafkaTemplate.send("bet-failed", event.betId().toString(), event);
     }
 }

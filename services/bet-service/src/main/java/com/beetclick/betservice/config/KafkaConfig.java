@@ -2,7 +2,6 @@ package com.beetclick.betservice.config;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
