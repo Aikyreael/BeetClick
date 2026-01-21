@@ -15,9 +15,9 @@ private final WalletService walletService;
         this.walletService = walletService;
     }
 
-    @GetMapping()
-    public WalletResponse getMyWallet(@RequestParam UUID walletId) {
-        WalletResponse wallet = walletService.getWalletByWalletId(walletId);
+    @GetMapping("/{userId}")
+    public WalletResponse getMyWallet(@PathVariable UUID userId) {
+        WalletResponse wallet = walletService.getWalletByUserId(userId);
         return wallet;
     }
 }
