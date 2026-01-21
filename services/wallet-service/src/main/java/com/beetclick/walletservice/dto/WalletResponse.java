@@ -1,4 +1,4 @@
-package dto;
+package com.beetclick.walletservice.dto;
 
 import lombok.Getter;
 import lombok.Setter;

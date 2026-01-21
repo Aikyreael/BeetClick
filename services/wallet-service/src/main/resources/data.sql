@@ -1,4 +1,4 @@
-INSERT INTO wallet (id,user_id,balance,coin,created_at,updtaed_at,created_by,updated_by)
+INSERT INTO wallet (id,user_id,balance,coin,created_at,updated_at,created_by,updated_by)
 VALUES
       (
           '11111111-1111-1111-1111-111111111111',

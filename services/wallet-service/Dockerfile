@@ -1,10 +1,10 @@
 FROM maven:3.9-eclipse-temurin-25 AS build
 
 WORKDIR /app
-COPY services/wallet-service/pom.xml .
+COPY pom.xml .
 RUN mvn -B dependency:go-offline
 
-COPY services/wallet-service/src ./src
+COPY src ./src
 RUN mvn -B package -DskipTests
 
 FROM eclipse-temurin:25-jre

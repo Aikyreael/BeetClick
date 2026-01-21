@@ -1,10 +1,10 @@
-package event;
+package com.beetclick.walletservice.event;
 
-import dto.events.PaymentSuccessEvent;
-import dto.events.WithdrawSuccessEvent;
+import com.beetclick.walletservice.dto.events.PaymentSuccessEvent;
+import com.beetclick.walletservice.dto.events.WithdrawSuccessEvent;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
-import service.WalletService;
+import com.beetclick.walletservice.service.WalletService;
 
 @Service
 public class WalletEventConsumer {

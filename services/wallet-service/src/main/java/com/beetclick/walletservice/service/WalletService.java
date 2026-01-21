@@ -1,15 +1,17 @@
-package service;
+package com.beetclick.walletservice.service;
 
-import dto.WalletResponse;
-import entity.Wallet;
+import com.beetclick.walletservice.dto.WalletResponse;
+import com.beetclick.walletservice.entity.Wallet;
 import jakarta.persistence.EntityNotFoundException;
-import repository.WalletRepository;
+import com.beetclick.walletservice.repository.WalletRepository;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@Service
 public class WalletService {
 
     private final WalletRepository walletRepository;
@@ -19,32 +21,40 @@ public class WalletService {
     }
 
     public List<WalletResponse> getAllWallets() {
-
-        return walletRepository.findAll();
-
+        List<Wallet> walletList = walletRepository.findAll();
+        return walletList.stream()
+                .map(wallet -> new WalletResponse(
+                        wallet.getBalance(),
+                        wallet.getCoin()
+                ))
+                .toList();
     }
 
     public WalletResponse getWalletByUserId(UUID userId) {
-        return walletRepository.findByUserId(userId)
-                .orElseThrow(() ->
-                        new EntityNotFoundException(
-                                "Wallet not found for userId=" + userId
-                        )
+        Wallet wallet  =  walletRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Wallet not found for userId: " + userId));
+
+        return  new WalletResponse(
+                        wallet.getBalance(),
+                        wallet.getCoin()
                 );
     }
 
     public WalletResponse getWalletByWalletId(UUID walletId){
-        return walletRepository.findById(walletId)
+        Wallet wallet =  walletRepository.findById(walletId)
                 .orElseThrow(() ->
                         new EntityNotFoundException(
-                                "Wallet not found for walletId=" + walletId
-                        )
-                );
+                                "Wallet not found for walletId=" + walletId));
+
+        return new WalletResponse(
+                wallet.getBalance(),
+                wallet.getCoin()
+        );
     }
 
     public WalletResponse updateWallet(UUID walletId, int coin) {
 
-        WalletResponse wallet = walletRepository.findById(walletId)
+        Wallet wallet = walletRepository.findById(walletId)
                 .orElseThrow(() ->
                         new EntityNotFoundException(
                                 "Wallet not found for walletId=" + walletId
@@ -52,7 +62,7 @@ public class WalletService {
                 );
 
         wallet.setCoin(coin);
-        WalletResponse updatedWallet = walletRepository.save(wallet);
+        Wallet updatedWallet = walletRepository.save(wallet);
 
         return new WalletResponse(
                 updatedWallet.getBalance(),
@@ -62,7 +72,7 @@ public class WalletService {
 
 
     public void creditWallet(UUID walletId, int amount) {
-        WalletResponse wallet = walletRepository.findById(walletId)
+        Wallet wallet = walletRepository.findById(walletId)
                 .orElseThrow(() -> new RuntimeException("Wallet not found"));
 
         wallet.setBalance(wallet.getBalance().add(BigDecimal.valueOf(amount)));
@@ -70,7 +80,7 @@ public class WalletService {
     }
 
     public void debitWallet(UUID walletId, int amount) {
-        WalletResponse wallet = walletRepository.findById(walletId)
+        Wallet wallet = walletRepository.findById(walletId)
                 .orElseThrow(() -> new RuntimeException("Wallet not found"));
         wallet.setBalance(wallet.getBalance().subtract(BigDecimal.valueOf(amount)));
         walletRepository.save(wallet);

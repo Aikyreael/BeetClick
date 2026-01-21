@@ -1,4 +1,4 @@
-package entity;
+package com.beetclick.walletservice.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -15,7 +15,7 @@ import java.util.UUID;
 public class Wallet {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     private UUID userId;
@@ -23,7 +23,7 @@ public class Wallet {
     private BigDecimal balance;
     private int coin;
     private Date createdAt;
-    private Date updtaedAt;
+    private Date updated_at;
     private String createdBy;
     private String updatedBy;
 }
