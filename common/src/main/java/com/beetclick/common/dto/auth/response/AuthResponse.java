@@ -1,13 +1,13 @@
-package com.beetclick.common.dto.auth;
+package com.beetclick.common.dto.auth.response;
 
-import java.time.Instant;
+import com.beetclick.common.entity.Role;
+
 import java.util.UUID;
 
 public record AuthResponse(
         UUID userId,
         String email,
-        AuthRole role,
+        Role role,
         String accessToken,
-        Instant accessTokenExpiresAt,
         String refreshToken
 ) {}
